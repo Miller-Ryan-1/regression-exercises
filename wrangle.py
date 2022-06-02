@@ -2,13 +2,16 @@
 from acquire import get_zillow_data
 import pandas as pd
 import numpy as np
+from scipy import stats
+import sklearn.preprocessing
 
 import warnings
 warnings.filterwarnings("ignore")
 
 def wrangle_zillow():
     '''
-    Acquires and prepares zillow data for exploration and modeling
+    Acquires and prepares zillow data for exploration and modeling.
+    Function Actions: Pulls Data -> Drops Nulls -> Converts datatypes to int (where possible) -> eliminates odd values
     '''
     # Pull data using an acquire function
     df = get_zillow_data()
@@ -17,11 +20,49 @@ def wrangle_zillow():
     df = df.dropna()
 
     # Convert to integers where we can
-    df = df.astype({'bedroomcnt':'int', 'calculatedfinishedsquarefeet':'int', 'taxvaluedollarcnt':'int', 'yearbuilt':'int', 'taxamount':'int','fips':'int'})
+    df = df.astype({'bedroomcnt':'int', 'calculatedfinishedsquarefeet':'int', 'taxvaluedollarcnt':'int', 'yearbuilt':'int','fips':'int'})
 
     # Eliminate the funky values
     df = df[df['calculatedfinishedsquarefeet'] > 400]
+    df = df[df['calculatedfinishedsquarefeet'] < 100000]
     df = df[df['taxvaluedollarcnt'] > 10000]
+    df = df[df['taxvaluedollarcnt'] < 20000000]
     df = df[df['taxamount'] > 200]
+    df = df[df['taxamount'] < 300000]
+    df = df[df['bathroomcnt'] > 0]
+    df = df[df['bedroomcnt'] > 0]
+    df = df[df['bathroomcnt'] < 8]
+    df = df[df['bedroomcnt'] < 8]
+
+    # Convert Fips to Names
+    df['fips_name'] = np.where(df.fips == 6037, 'Los Angeles', np.where(df.fips == 6059, 'Orange','Ventura') )
+    df = df.drop(columns = 'fips')
 
     return df
+
+def scale_zillow(df_train,df_validate,df_test):
+    # Create the object
+    scaler = sklearn.preprocessing.MinMaxScaler()
+    scaler.fit(df_train.drop(columns='fips_name'))
+
+    # Fit the data
+    df_train_scaled = pd.DataFrame(scaler.transform(df_train.drop(columns='fips_name')),columns=df_train.drop(columns='fips_name').columns.values).set_index([df_train.index.values])
+    df_validate_scaled = pd.DataFrame(scaler.transform(df_validate.drop(columns='fips_name')),columns=df_validate.drop(columns='fips_name').columns.values).set_index([df_validate.index.values])
+    df_test_scaled = pd.DataFrame(scaler.transform(df_test.drop(columns='fips_name')),columns=df_test.drop(columns='fips_name').columns.values).set_index([df_test.index.values])
+
+    # Add back in the fips
+    df_train_scaled['fips_name'] = df_train['fips_name']
+    df_validate_scaled['fips_name'] = df_validate['fips_name']
+    df_test_scaled['fips_name'] = df_test['fips_name']
+
+      # Encode fips_name
+    dummy_df_train = pd.get_dummies(df_train_scaled[['fips_name']], dummy_na=False, drop_first=False)
+    dummy_df_validate = pd.get_dummies(df_validate_scaled[['fips_name']], dummy_na=False, drop_first=False)
+    dummy_df_test = pd.get_dummies(df_test_scaled[['fips_name']], dummy_na=False, drop_first=False)
+    
+    df_train_scaled = pd.concat([df_train_scaled, dummy_df_train], axis=1)
+    df_validate_scaled = pd.concat([df_validate_scaled, dummy_df_validate], axis=1)
+    df_test_scaled = pd.concat([df_test_scaled, dummy_df_test], axis=1)
+
+    return df_train_scaled, df_validate_scaled, df_test_scaled
+
