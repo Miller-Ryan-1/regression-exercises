@@ -22,11 +22,14 @@ def wrangle_zillow():
     # Convert to integers where we can
     df = df.astype({'bedroomcnt':'int', 'calculatedfinishedsquarefeet':'int', 'taxvaluedollarcnt':'int', 'yearbuilt':'int','fips':'int'})
 
+    # Rename annoying long names
+    df = df.rename(columns={'calculatedfinishedsquarefeet':'sqft','taxvaluedollarcnt':'value'})
+
     # Eliminate the funky values
-    df = df[df['calculatedfinishedsquarefeet'] > 400]
-    df = df[df['calculatedfinishedsquarefeet'] < 100000]
-    df = df[df['taxvaluedollarcnt'] > 10000]
-    df = df[df['taxvaluedollarcnt'] < 20000000]
+    df = df[df['sqft'] > 400]
+    df = df[df['sqft'] < 100000]
+    df = df[df['value'] > 10000]
+    df = df[df['value'] < 20000000]
     df = df[df['taxamount'] > 200]
     df = df[df['taxamount'] < 300000]
     df = df[df['bathroomcnt'] > 0]
