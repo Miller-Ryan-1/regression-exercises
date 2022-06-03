@@ -27,7 +27,7 @@ def wrangle_zillow():
 
     # Eliminate the funky values
     df = df[df['sqft'] > 400]
-    df = df[df['sqft'] < 100000]
+    df = df[df['sqft'] < 10000]
     df = df[df['value'] > 10000]
     df = df[df['value'] < 20000000]
     df = df[df['taxamount'] > 200]
