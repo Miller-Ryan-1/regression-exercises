@@ -12,11 +12,11 @@ def splitter(df, target = 'None', train_split_1 = .8, train_split_2 = .7, random
     if target == 'None':
         train, test = train_test_split(df, train_size = train_split_1, random_state = random_state)
         train, validate = train_test_split(train, train_size = train_split_2, random_state = random_state)
-        print(f'Train = {100*(train_split_1*train_split_2):.1f}% | Validate = {100*(train_split_1*(1-train_split_2)):.1f}% | Test = {100*(1-train_split_1):.1f}%')
+        print(f'Train = {train.shape[0]} rows ({100*(train_split_1*train_split_2):.1f}%) | Validate = {validate.shape[0]} rows ({100*(train_split_1*(1-train_split_2)):.1f}%) | Test = {test.shape[0]} rows ({100*(1-train_split_1):.1f}%)')
         print('You did not stratify.  If looking to stratify, ensure to add argument: "target = variable to stratify on".')
         return train, validate, test
     else: 
         train, test = train_test_split(df, train_size = train_split_1, random_state = random_state, stratify = df[target])
         train, validate = train_test_split(train, train_size = train_split_2, random_state = random_state, stratify = train[target])
-        print(f'Train = {100*(train_split_1*train_split_2):.1f}% | Validate = {100*(train_split_1*(1-train_split_2)):.1f}% | Test = {100*(1-train_split_1):.1f}%')
+        print(f'Train = {train.shape[0]} rows ({100*(train_split_1*train_split_2):.1f}%) | Validate = {validate.shape[0]} rows ({100*(train_split_1*(1-train_split_2)):.1f}%) | Test = {test.shape[0]} rows ({100*(1-train_split_1):.1f}%)')
         return train, validate, test       
