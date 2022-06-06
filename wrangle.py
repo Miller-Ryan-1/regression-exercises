@@ -44,21 +44,26 @@ def wrangle_zillow():
     return df
 
 def scale_zillow(df_train,df_validate,df_test):
-    # Create the object
+    # Create the object, dropping categorical and target variables
     scaler = sklearn.preprocessing.MinMaxScaler()
-    scaler.fit(df_train.drop(columns='fips_name'))
+    scaler.fit(df_train.drop(columns=['fips_name','value']))
 
     # Fit the data
-    df_train_scaled = pd.DataFrame(scaler.transform(df_train.drop(columns='fips_name')),columns=df_train.drop(columns='fips_name').columns.values).set_index([df_train.index.values])
-    df_validate_scaled = pd.DataFrame(scaler.transform(df_validate.drop(columns='fips_name')),columns=df_validate.drop(columns='fips_name').columns.values).set_index([df_validate.index.values])
-    df_test_scaled = pd.DataFrame(scaler.transform(df_test.drop(columns='fips_name')),columns=df_test.drop(columns='fips_name').columns.values).set_index([df_test.index.values])
+    df_train_scaled = pd.DataFrame(scaler.transform(df_train.drop(columns=['fips_name','value'])),columns=df_train.drop(columns=['fips_name','value']).columns.values).set_index([df_train.index.values])
+    df_validate_scaled = pd.DataFrame(scaler.transform(df_validate.drop(columns=['fips_name','value'])),columns=df_validate.drop(columns=['fips_name','value']).columns.values).set_index([df_validate.index.values])
+    df_test_scaled = pd.DataFrame(scaler.transform(df_test.drop(columns=['fips_name','value'])),columns=df_test.drop(columns=['fips_name','value']).columns.values).set_index([df_test.index.values])
 
     # Add back in the fips
     df_train_scaled['fips_name'] = df_train['fips_name']
     df_validate_scaled['fips_name'] = df_validate['fips_name']
     df_test_scaled['fips_name'] = df_test['fips_name']
 
-      # Encode fips_name
+    # Add back in the target
+    df_train_scaled['value'] = df_train['value']
+    df_validate_scaled['value'] = df_validate['value']
+    df_test_scaled['value'] = df_test['value']
+
+    # Encode fips_name
     dummy_df_train = pd.get_dummies(df_train_scaled[['fips_name']], dummy_na=False, drop_first=False)
     dummy_df_validate = pd.get_dummies(df_validate_scaled[['fips_name']], dummy_na=False, drop_first=False)
     dummy_df_test = pd.get_dummies(df_test_scaled[['fips_name']], dummy_na=False, drop_first=False)
